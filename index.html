@@ -12,20 +12,12 @@ xhttp.onreadystatechange = function() {
     //document.getElementById('theresponse').innerHTML  = this.responseText;
 	var thegenres=this.responseText;
 	Allgenres = JSON.parse(thegenres);
-	buildfilterhtml(); //builds the html for the genre filter bar
-    }
+	}
   };
 xhttp.open("GET", "https://api.themoviedb.org/3/genre/movie/list?api_key=27f38d14a7f8927faef95249fb30fe3b&language=en-US", true);
 xhttp.send();
-function buildfilterhtml()
-{
-var genrefiltertxt = ""
-for(g=0;g<Allgenres.genres.length;g++)
-	{//loops through the allgenres array to build the html for the genre filter bar
-	genrefiltertxt += "<label class=\"container\">" +  Allgenres.genres[g].name + "<input type=\"checkbox\" value=\"" + Allgenres.genres[g].name + "\" onclick=\"showmovies('" + Allgenres.genres[g].name + "')\"><span class=\"checkmark\"></span></label>";
-	}
-document.getElementById("genreswrapper").innerHTML = "<div id=\"genrelabel\">GENRES</div>" + genrefiltertxt;
-}  
+
+ 
 function getgenres(theids)
 	{
 	/*
@@ -61,7 +53,8 @@ function loadDoc()
 			 //used the above to see the json being returned from tmdb
 			 var themovies=this.responseText;
 			 movies = JSON.parse(themovies);
-			 showmovies()
+			 showmovies();
+			 buildfilterhtml();
 			}
 		};
 	xhttp.open("GET", "https://api.themoviedb.org/3/movie/popular?api_key=27f38d14a7f8927faef95249fb30fe3b&language=en-US&page=1", true);
@@ -155,6 +148,18 @@ function changepadding()
 	{//this makes sure that the showmovies div remains nicely under the fixed menu bar at the top
 	document.getElementById("showmovies").style.paddingTop = document.getElementById("filterbar").clientHeight + 10;
 	}
+	
+function buildfilterhtml()
+	{
+	var genrefiltertxt = ""
+	for(g=0;g<Allgenres.genres.length;g++)
+		{//loops through the allgenres array to build the html for the genre filter bar
+		genrefiltertxt += "<label class=\"container\">" +  Allgenres.genres[g].name + "<input type=\"checkbox\" value=\"" + Allgenres.genres[g].name + "\" onclick=\"showmovies('" + Allgenres.genres[g].name + "')\"><span class=\"checkmark\"></span></label>";
+		}
+		//alert(genrefiltertxt)
+	document.getElementById("genreswrapper").innerHTML = "<div id=\"genrelabel\">GENRES</div>" + genrefiltertxt;
+	changepadding(); //makes sure the movies sit underneath the filterbar
+	} 
 </script>
 
 <style type="text/css">
@@ -199,8 +204,8 @@ font-style:italic;
 color:#999999;
 }
 
-#genres{
-font-size:.8em;
+.genres{
+font-size:.9em;
 height:50px;
 margin:auto;
 text-align:center;
@@ -212,6 +217,7 @@ padding-bottom:20px;
 color:#ffffff;
 position:fixed;
 text-align:center;
+width:100%;
 }
 
 .container {
@@ -369,7 +375,7 @@ padding-top:30px;
 -->
 </style>
 </head>
-<body onload="loadDoc();changepadding()" onresize="changepadding()";>
+<body onload="loadDoc();changepadding();" onresize="changepadding()";>
 <div id="theresponse"></div>
 <div id="filterbar"><form>
 <div id="genreswrapper"></div>
