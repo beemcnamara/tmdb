@@ -1,0 +1,422 @@
+<html lang=''>
+<head>
+<title>TMDB Task</title>
+<link href="https://fonts.googleapis.com/css?family=Muli&display=swap" rel="stylesheet">
+<script>
+var genres;
+//use ajax to load up the genres file from tmdb
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function() {
+	if (this.readyState == 4 && this.status == 200) 
+	{
+    //document.getElementById('theresponse').innerHTML  = this.responseText;
+	var thegenres=this.responseText;
+	Allgenres = JSON.parse(thegenres);
+	buildfilterhtml(); //builds the html for the genre filter bar
+    }
+  };
+xhttp.open("GET", "https://api.themoviedb.org/3/genre/movie/list?api_key=27f38d14a7f8927faef95249fb30fe3b&language=en-US", true);
+xhttp.send();
+function buildfilterhtml()
+{
+var genrefiltertxt = ""
+for(g=0;g<Allgenres.genres.length;g++)
+	{//loops through the allgenres array to build the html for the genre filter bar
+	genrefiltertxt += "<label class=\"container\">" +  Allgenres.genres[g].name + "<input type=\"checkbox\" value=\"" + Allgenres.genres[g].name + "\" onclick=\"showmovies('" + Allgenres.genres[g].name + "')\"><span class=\"checkmark\"></span></label>";
+	}
+document.getElementById("genreswrapper").innerHTML = "<div id=\"genrelabel\">GENRES</div>" + genrefiltertxt;
+}  
+function getgenres(theids)
+	{
+	/*
+	this script takes the genre ids found for each film and references it against the ids found from the genre file and creates
+	a string for each film showing the genre's
+	*/
+	theids = theids.toString();
+	var currgenres = theids.split(",") //split the genres found for this film into an array
+	var genretext = "";
+	for(a=0;a<currgenres.length;a++)//loop through the genre array for the current film
+		{
+		for(b=0;b<Allgenres.genres.length;b++)//loop through the array of the genre list that we got above
+			{
+			if(currgenres[a]==Allgenres.genres[b].id) //if the ids match add the text and a comma and space to genretext
+				{
+				genretext += Allgenres.genres[b].name + ", ";
+				}
+			}
+		}
+		return genretext.substr(0,genretext.length - 2); //with genretext created, remove the final comma and trailing space
+
+	}
+	
+function loadDoc() 
+	{
+	//load the popular films list from tmdb and when loaded pass monto the showmovies function
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() 
+		{
+		if (this.readyState == 4 && this.status == 200) 
+			{
+			 //document.getElementById('theresponse').innerHTML  += this.responseText;
+			 //used the above to see the json being returned from tmdb
+			 var themovies=this.responseText;
+			 movies = JSON.parse(themovies);
+			 showmovies()
+			}
+		};
+	xhttp.open("GET", "https://api.themoviedb.org/3/movie/popular?api_key=27f38d14a7f8927faef95249fb30fe3b&language=en-US&page=1", true);
+	xhttp.send();
+	}
+
+var filtervalues = "";
+var inputElems = "";
+var filteredvalues;
+var thehtml;
+
+function showmovies()
+	{
+	//Now I have the arrays built for the movies I can check any filters and then display them
+	ratingvalue = 0; //set ratingvalue at 0 as when we load the page we want to see all
+	document.getElementById("showmovies").innerHTML = "";//set the showmovies div to be empty so it doesn't pick up on previous times run
+	var filtervalues = "";
+		inputElems = document.getElementsByTagName("input")
+		for (e=0; e<inputElems.length; e++) //see if any check boxes have been selected and if so add them to the filtervalue string
+			{
+			if (inputElems[e].type == "checkbox" && inputElems[e].checked == true)
+				{
+				filtervalues += inputElems[e].value + ",";
+				}
+			}
+		
+		inputElems2 = document.getElementsByTagName("input")
+		for (e=0; e<inputElems2.length; e++)//check the radio buttons to see which has been selected
+			{
+			if (inputElems2[e].type == "radio" && inputElems2[e].checked == true)
+				{
+				ratingvalue = inputElems2[e].value;
+				//alert(ratingvalue)
+				}
+			}	
+
+		thehtml = "";
+		if(filtervalues.trim()!="")
+			{
+			//a filter has been chosen
+			//so split filtervalue string to put filter ids into an array
+			filteredvalues = filtervalues.split(",");
+			for(i=0;i<movies.results.length; i++)
+				{//loop through the movie results
+				filmgenres = getgenres(movies.results[i].genre_ids);
+				//convert the genre ids for this film into a string for the film
+				showthisfilm = true; //mark the film as one to be shown before we run tests to see if it makes it through the filters
+				if(ratingvalue <= movies.results[i].vote_average)
+					{//check this film has equal to or higher vote_average than has been selected. If it hasn't then there's no pint in running the other filter checks
+					for(f=0;f<filteredvalues.length;f++)
+						{
+						if((filmgenres.indexOf(filteredvalues[f]) == -1))
+							{
+							//film vote_average is higher than selected so loop through all genre filters individually and if one is found not to be correct mark showthisfilm as false
+							showthisfilm = false;
+							}
+						}
+					if(showthisfilm)
+					{
+						//if showthisfilm is still true then display it
+						displayfilm(i);
+					}
+					}
+					
+				}
+			
+			}
+		else
+			{
+			for(i=0;i<movies.results.length; i++)
+				{// no genre filters have been selected so we can just loop through and display the films
+				if(ratingvalue <= movies.results[i].vote_average)
+					{//as long as they have a higher vote_average than the selected rating
+					displayfilm(i);
+					}
+				}
+			}
+		if(thehtml == "")
+			{//no films to have got through the filters so add this html
+			thehtml = "<h2>No films found using the filters chosen, please amend your selection</h2>";
+			}
+		document.getElementById('showmovies').innerHTML = thehtml;//add thehtml to the showmovies div
+	}
+	
+function displayfilm(arrayid)
+	{//adds the film to the html that will be displayed in showmovies div
+	thehtml += "<div class=\"moviebox\"><img src=\"https://image.tmdb.org/t/p/w500/" + movies.results[arrayid].poster_path + "\" alt=\"" + movies.results[arrayid].title + "\" /><div class=\"title\">" + movies.results[arrayid].title + "</div><div class=\"genres\">" + getgenres(movies.results[arrayid].genre_ids) + "</div><div class=\"popularity\">popularity: " + movies.results[arrayid].popularity + "</div></div>";
+	}
+
+function changepadding()
+	{//this makes sure that the showmovies div remains nicely under the fixed menu bar at the top
+	document.getElementById("showmovies").style.paddingTop = document.getElementById("filterbar").clientHeight + 10;
+	}
+</script>
+
+<style type="text/css">
+<!--
+body{
+text-align:center;
+font-family: 'Muli', sans-serif;
+margin:0;
+background-color:#999999;
+}
+
+.moviebox
+{
+background-color:#ffffff;
+width:300px;
+height:600px;
+margin:12px;
+display:inline-block;
+border-radius:8px;
+text-align:center;
+overflow:hidden;	
+/*-webkit-box-shadow: 0px 11px 19px -15px rgba(0,0,0,0.46);
+-moz-box-shadow: 0px 11px 19px -15px rgba(0,0,0,0.46);
+box-shadow: 0px 11px 19px -15px rgba(0,0,0,0.46);*/
+
+-webkit-box-shadow: 0px 5px 26px -9px rgba(0,0,0,1);
+-moz-box-shadow: 0px 5px 26px -9px rgba(0,0,0,1);
+box-shadow: 0px 5px 26px -9px rgba(0,0,0,1);
+font-family: 'Muli', sans-serif;
+}
+.moviebox img{
+width:100%;
+}
+.title{
+font-weight:bold;
+font-size:1.3em;
+height:60px;
+margin-top:6px;
+}
+.popularity{
+font-style:italic;
+color:#999999;
+}
+
+#genres{
+font-size:.8em;
+height:50px;
+margin:auto;
+text-align:center;
+}
+#filterbar{
+background-color:#333333;
+min-height:160px;
+padding-bottom:20px;
+color:#ffffff;
+position:fixed;
+text-align:center;
+}
+
+.container {
+  display: block;
+  float:left;
+  position: relative;
+  padding-left: 35px;
+  margin: 6px 12px 6px 12px;
+  cursor: pointer;
+  font-size: 15px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  width:110px;
+  text-align:left;
+}
+
+/* Hide the browser's default checkbox */
+.container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Create a custom checkbox */
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 25px;
+  width: 25px;
+  background-color: #eee;
+}
+
+/* On mouse-over, add a grey background color */
+.container:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+/* When the checkbox is checked, add a blue background */
+.container input:checked ~ .checkmark {
+  background-color: #2196F3;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the checkmark when checked */
+.container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Style the checkmark/indicator */
+.container .checkmark:after {
+  left: 9px;
+  top: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+
+#ratingswrapper,#genreswrapper{
+clear:both;
+margin-left:10px;
+}
+
+#ratinglabel, #genrelabel
+{
+padding:10px;
+text-align:left;
+font-size:20px;
+}
+
+#ratinglabel{
+padding-top:30px;
+}
+
+.rcontainer {
+  display: block;
+  float:left;
+  position: relative;
+  padding-left: 15px;
+  margin: 6px 12px 6px 12px;
+  cursor: pointer;
+  font-size: 15px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  width:60px;
+}
+
+/* Hide the browser's default radio button */
+.rcontainer input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Create a custom radio button */
+.rcheckmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 25px;
+  width: 25px;
+  background-color: #eee;
+  border-radius: 50%;
+}
+
+/* On mouse-over, add a grey background color */
+.rcontainer:hover input ~ .rcheckmark {
+  background-color: #ccc;
+}
+
+/* When the radio button is checked, add a blue background */
+.rcontainer input:checked ~ .rcheckmark {
+  background-color: #2196F3;
+}
+
+/* Create the indicator (the dot/circle - hidden when not checked) */
+.rcheckmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the indicator (dot/circle) when checked */
+.rcontainer input:checked ~ .rcheckmark:after {
+  display: block;
+}
+
+/* Style the indicator (dot/circle) */
+.rcontainer .rcheckmark:after {
+  top: 9px;
+  left: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+}
+-->
+</style>
+</head>
+<body onload="loadDoc();changepadding()" onresize="changepadding()";>
+<div id="theresponse"></div>
+<div id="filterbar"><form>
+<div id="genreswrapper"></div>
+<div id="ratingswrapper"><div id="ratinglabel">RATINGS</div>
+<label class="rcontainer"> ALL
+<input type="radio" name="ratings" value="0" onclick="showmovies()" checked="checked" />
+  <span class="rcheckmark"></span>
+</label>
+<label class="rcontainer"> 1+
+<input type="radio" name="ratings" value="1" onclick="showmovies()" />
+  <span class="rcheckmark"></span>
+</label>
+<label class="rcontainer">
+<input type="radio" name="ratings" value="2" onclick="showmovies()" /> 2+ 
+  <span class="rcheckmark"></span>
+</label>
+<label class="rcontainer">
+<input type="radio" name="ratings" value="3" onclick="showmovies()" /> 3+ 
+  <span class="rcheckmark"></span>
+</label>
+<label class="rcontainer">
+<input type="radio" name="ratings" value="4" onclick="showmovies()" /> 4+ 
+  <span class="rcheckmark"></span>
+</label>
+<label class="rcontainer">
+<input type="radio" name="ratings" value="5" onclick="showmovies()" /> 5+
+  <span class="rcheckmark"></span>
+</label>
+<label class="rcontainer"> 
+<input type="radio" name="ratings" value="6" onclick="showmovies()" /> 6+
+  <span class="rcheckmark"></span>
+</label>
+<label class="rcontainer"> 
+<input type="radio" name="ratings" value="7" onclick="showmovies()" /> 7+ 
+  <span class="rcheckmark"></span>
+</label>
+<label class="rcontainer">
+<input type="radio" name="ratings" value="8" onclick="showmovies()" /> 8+ 
+  <span class="rcheckmark"></span>
+</label>
+<label class="rcontainer">
+<input type="radio" name="ratings" value="9" onclick="showmovies()" /> 9+
+  <span class="rcheckmark"></span>
+</label>
+</div></div>
+</form><div style="clear:both;"></div></div>
+
+<div id="showmovies"></div>
+</body>
+</html>
