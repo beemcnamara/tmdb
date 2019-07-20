@@ -2,6 +2,8 @@
 <head>
 <title>TMDB Task</title>
 <link href="https://fonts.googleapis.com/css?family=Muli&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#333333" />
 <script>
 var genres;
 //use ajax to load up the genres file from tmdb
@@ -57,7 +59,7 @@ function loadDoc()
 			 buildfilterhtml();
 			}
 		};
-	xhttp.open("GET", "https://api.themoviedb.org/3/movie/popular?api_key=27f38d14a7f8927faef95249fb30fe3b&language=en-US&page=1", true);
+	xhttp.open("GET", "https://api.themoviedb.org/3/movie/now_playing?api_key=27f38d14a7f8927faef95249fb30fe3b&language&language=en-US&page=1", true);
 	xhttp.send();
 	}
 
@@ -69,7 +71,7 @@ var thehtml;
 function showmovies()
 	{
 	//Now I have the arrays built for the movies I can check any filters and then display them
-	ratingvalue = 0; //set ratingvalue at 0 as when we load the page we want to see all
+	ratingvalue = 3; //set ratingvalue at 0 as when we load the page we want to see all
 	document.getElementById("showmovies").innerHTML = "";//set the showmovies div to be empty so it doesn't pick up on previous times run
 	var filtervalues = "";
 		inputElems = document.getElementsByTagName("input")
@@ -381,7 +383,7 @@ padding-top:30px;
 <div id="genreswrapper"></div>
 <div id="ratingswrapper"><div id="ratinglabel">RATINGS</div>
 <label class="rcontainer"> ALL
-<input type="radio" name="ratings" value="0" onclick="showmovies()" checked="checked" />
+<input type="radio" name="ratings" value="0" onclick="showmovies()" />
   <span class="rcheckmark"></span>
 </label>
 <label class="rcontainer"> 1+
@@ -393,7 +395,7 @@ padding-top:30px;
   <span class="rcheckmark"></span>
 </label>
 <label class="rcontainer">
-<input type="radio" name="ratings" value="3" onclick="showmovies()" /> 3+ 
+<input type="radio" name="ratings" value="3" onclick="showmovies()" checked="checked" /> 3+ 
   <span class="rcheckmark"></span>
 </label>
 <label class="rcontainer">
