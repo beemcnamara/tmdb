@@ -2,10 +2,8 @@
 <head>
 <title>TMDB Task</title>
 <link href="https://fonts.googleapis.com/css?family=Muli&display=swap" rel="stylesheet">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content=333333" />
 <script>
-var Allgenres;
+var genres;
 //use ajax to load up the genres file from tmdb
 var xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function() {
@@ -59,20 +57,19 @@ function loadDoc()
 			 buildfilterhtml();
 			}
 		};
-	//xhttp.open("GET", "https://api.themoviedb.org/3/movie/popular?api_key=27f38d14a7f8927faef95249fb30fe3b&language=en-US&page=1", true);
-	xhttp.open("GET", "https://api.themoviedb.org/3/movie/now_playing?api_key=27f38d14a7f8927faef95249fb30fe3b&language&language=en-US&page=1", true);
+	xhttp.open("GET", "https://api.themoviedb.org/3/movie/popular?api_key=27f38d14a7f8927faef95249fb30fe3b&language=en-US&page=1", true);
 	xhttp.send();
 	}
 
 var filtervalues = "";
 var inputElems = "";
 var filteredvalues;
-var thehtml
-var checkgenres = "";
+var thehtml;
+
 function showmovies()
 	{
 	//Now I have the arrays built for the movies I can check any filters and then display them
-	ratingvalue = 3; //set ratingvalue at 3
+	ratingvalue = 0; //set ratingvalue at 0 as when we load the page we want to see all
 	document.getElementById("showmovies").innerHTML = "";//set the showmovies div to be empty so it doesn't pick up on previous times run
 	var filtervalues = "";
 		inputElems = document.getElementsByTagName("input")
@@ -83,7 +80,7 @@ function showmovies()
 				filtervalues += inputElems[e].value + ",";
 				}
 			}
-		//alert(filtervalues)
+		
 		inputElems2 = document.getElementsByTagName("input")
 		for (e=0; e<inputElems2.length; e++)//check the radio buttons to see which has been selected
 			{
@@ -93,8 +90,8 @@ function showmovies()
 				//alert(ratingvalue)
 				}
 			}	
-thehtml = "";
 
+		thehtml = "";
 		if(filtervalues.trim()!="")
 			{
 			//a filter has been chosen
@@ -129,13 +126,11 @@ thehtml = "";
 			{
 			for(i=0;i<movies.results.length; i++)
 				{// no genre filters have been selected so we can just loop through and display the films
-				checkgenres += "," + movies.results[i].genre_ids + ","; //collect all genre ids so we can only show filters for these
 				if(ratingvalue <= movies.results[i].vote_average)
 					{//as long as they have a higher vote_average than the selected rating
 					displayfilm(i);
 					}
 				}
-
 			}
 		if(thehtml == "")
 			{//no films to have got through the filters so add this html
@@ -149,36 +144,31 @@ function displayfilm(arrayid)
 	thehtml += "<div class=\"moviebox\"><img src=\"https://image.tmdb.org/t/p/w500/" + movies.results[arrayid].poster_path + "\" alt=\"" + movies.results[arrayid].title + "\" /><div class=\"title\">" + movies.results[arrayid].title + "</div><div class=\"genres\">" + getgenres(movies.results[arrayid].genre_ids) + "</div><div class=\"popularity\">popularity: " + movies.results[arrayid].popularity + "</div></div>";
 	}
 
+function changepadding()
+	{//this makes sure that the showmovies div remains nicely under the fixed menu bar at the top
+	document.getElementById("showmovies").style.paddingTop = document.getElementById("filterbar").clientHeight + 10;
+	}
 	
 function buildfilterhtml()
 	{
-
-	var genrefiltertxt = "";
+	var genrefiltertxt = ""
 	for(g=0;g<Allgenres.genres.length;g++)
-		{//loops through the allgenres array to build the html for the genre filter bar - checks first if the ID appears in checkgenres
-		if(checkgenres.indexOf(Allgenres.genres[g].id) != -1)
-		{
+		{//loops through the allgenres array to build the html for the genre filter bar
 		genrefiltertxt += "<label class=\"container\">" +  Allgenres.genres[g].name + "<input type=\"checkbox\" value=\"" + Allgenres.genres[g].name + "\" onclick=\"showmovies('" + Allgenres.genres[g].name + "')\"><span class=\"checkmark\"></span></label>";
 		}
-		}
+		//alert(genrefiltertxt)
 	document.getElementById("genreswrapper").innerHTML = "<div id=\"genrelabel\">GENRES</div>" + genrefiltertxt;
+	changepadding(); //makes sure the movies sit underneath the filterbar
 	} 
 </script>
 
 <style type="text/css">
 <!--
-html, body{
-height:100%;
-min-height:100%;
-}
-
 body{
 text-align:center;
 font-family: 'Muli', sans-serif;
 margin:0;
-background:#999999 url('background.png') repeat-y 0px 0px;
-//border:1px solid #ff0000;
-
+background-color:#999999;
 }
 
 .moviebox
@@ -221,19 +211,13 @@ margin:auto;
 text-align:center;
 }
 #filterbar{
+background-color:#333333;
+min-height:160px;
 padding-bottom:20px;
 color:#ffffff;
+position:fixed;
 text-align:center;
-width:200px;
-float:left;
-height:100%;
-//border:1px solid #ffffff;
-min-height:100%;
-}
-#showmovies{
-float:left;
-width: calc(100% - 200px);
-height:100%
+width:100%;
 }
 
 .container {
@@ -335,7 +319,6 @@ padding-top:30px;
   -ms-user-select: none;
   user-select: none;
   width:60px;
-  text-align:right;
 }
 
 /* Hide the browser's default radio button */
@@ -389,51 +372,28 @@ padding-top:30px;
   border-radius: 50%;
   background: white;
 }
-@media screen and (max-width: 1080px) { 
-#filterbar
-{
-
-}
-}
-
 -->
 </style>
 </head>
-<body onload="loadDoc();">
+<body onload="loadDoc();changepadding();" onresize="changepadding()";>
 <div id="theresponse"></div>
 <div id="filterbar"><form>
 <div id="genreswrapper"></div>
 <div id="ratingswrapper"><div id="ratinglabel">RATINGS</div>
-<label class="rcontainer"> 
-<input type="radio" name="ratings" value="0" onclick="showmovies()" /> 0+
+<label class="rcontainer"> ALL
+<input type="radio" name="ratings" value="0" onclick="showmovies()" checked="checked" />
   <span class="rcheckmark"></span>
 </label>
-<label class="rcontainer"> 
-<input type="radio" name="ratings" value="0.5" onclick="showmovies()" /> 0.5+
-  <span class="rcheckmark"></span>
-</label>
-<label class="rcontainer">
-<input type="radio" name="ratings" value="1" onclick="showmovies()" /> 1+
-  <span class="rcheckmark"></span>
-</label>
-<label class="rcontainer">
-<input type="radio" name="ratings" value="1.5" onclick="showmovies()" /> 1.5+
+<label class="rcontainer"> 1+
+<input type="radio" name="ratings" value="1" onclick="showmovies()" />
   <span class="rcheckmark"></span>
 </label>
 <label class="rcontainer">
 <input type="radio" name="ratings" value="2" onclick="showmovies()" /> 2+ 
   <span class="rcheckmark"></span>
 </label>
-<label class="rcontainer"> 
-<input type="radio" name="ratings" value="2.5" onclick="showmovies()" /> 2.5+
-  <span class="rcheckmark"></span>
-</label>
 <label class="rcontainer">
-<input type="radio" name="ratings" value="3" onclick="showmovies()" checked="checked" /> 3+ 
-  <span class="rcheckmark"></span>
-</label>
-<label class="rcontainer">
-<input type="radio" name="ratings" value="3.5" onclick="showmovies()" /> 3.5+
+<input type="radio" name="ratings" value="3" onclick="showmovies()" /> 3+ 
   <span class="rcheckmark"></span>
 </label>
 <label class="rcontainer">
@@ -441,23 +401,11 @@ padding-top:30px;
   <span class="rcheckmark"></span>
 </label>
 <label class="rcontainer">
-<input type="radio" name="ratings" value="4.5" onclick="showmovies()" /> 4.5+
-  <span class="rcheckmark"></span>
-</label>
-<label class="rcontainer">
 <input type="radio" name="ratings" value="5" onclick="showmovies()" /> 5+
-  <span class="rcheckmark"></span>
-</label>
-<label class="rcontainer">
-<input type="radio" name="ratings" value="5.5" onclick="showmovies()" /> 5.5+
   <span class="rcheckmark"></span>
 </label>
 <label class="rcontainer"> 
 <input type="radio" name="ratings" value="6" onclick="showmovies()" /> 6+
-  <span class="rcheckmark"></span>
-</label>
-<label class="rcontainer">
-<input type="radio" name="ratings" value="6.5" onclick="showmovies()" /> 6.5+
   <span class="rcheckmark"></span>
 </label>
 <label class="rcontainer"> 
@@ -465,30 +413,16 @@ padding-top:30px;
   <span class="rcheckmark"></span>
 </label>
 <label class="rcontainer">
-<input type="radio" name="ratings" value="7.5" onclick="showmovies()" /> 7.5+
-  <span class="rcheckmark"></span>
-</label>
-<label class="rcontainer">
 <input type="radio" name="ratings" value="8" onclick="showmovies()" /> 8+ 
-  <span class="rcheckmark"></span>
-</label>
-<label class="rcontainer">
-<input type="radio" name="ratings" value="8.5" onclick="showmovies()" /> 8.5+
   <span class="rcheckmark"></span>
 </label>
 <label class="rcontainer">
 <input type="radio" name="ratings" value="9" onclick="showmovies()" /> 9+
   <span class="rcheckmark"></span>
 </label>
-<label class="rcontainer">
-<input type="radio" name="ratings" value="" onclick="showmovies()" /> 9.5+
-  <span class="rcheckmark"></span>
-</label>
-</div>
-</form></div>
+</div></div>
+</form><div style="clear:both;"></div></div>
 
 <div id="showmovies"></div>
-<div style="clear:both;"></div>
-
 </body>
 </html>
