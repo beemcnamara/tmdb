@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#333333" />
 <script>
-var Allgenres;
+let Allgenres;
 //use ajax to load up the genres file from tmdb
-var xhttp = new XMLHttpRequest();
+const xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function() {
 	if (this.readyState == 4 && this.status == 200) 
 	{
     //document.getElementById('theresponse').innerHTML  = this.responseText;
-	var thegenres=this.responseText;
+	const thegenres=this.responseText;
 	Allgenres = JSON.parse(thegenres);
 	}
   };
@@ -27,8 +27,8 @@ function getgenres(theids)
 	a string for each film showing the genre's
 	*/
 	theids = theids.toString();
-	var currgenres = theids.split(",") //split the genres found for this film into an array
-	var genretext = "";
+	let currgenres = theids.split(","); //split the genres found for this film into an array
+	let genretext = "";
 	for(a=0;a<currgenres.length;a++)//loop through the genre array for the current film
 		{
 		for(b=0;b<Allgenres.genres.length;b++)//loop through the array of the genre list that we got above
@@ -46,14 +46,14 @@ function getgenres(theids)
 function loadDoc() 
 	{
 	//load the popular films list from tmdb and when loaded pass monto the showmovies function
-	var xhttp = new XMLHttpRequest();
+	const xhttp = new XMLHttpRequest();
 	xhttp.onreadystatechange = function() 
 		{
 		if (this.readyState == 4 && this.status == 200) 
 			{
 			 //document.getElementById('theresponse').innerHTML  += this.responseText;
 			 //used the above to see the json being returned from tmdb
-			 var themovies=this.responseText;
+			 const themovies=this.responseText;
 			 movies = JSON.parse(themovies);
 			 showmovies();
 			 buildfilterhtml();
@@ -64,17 +64,17 @@ function loadDoc()
 	xhttp.send();
 	}
 
-var filtervalues = "";
-var inputElems = "";
-var filteredvalues;
-var thehtml
-var checkgenres = "";
+let filtervalues = "";
+let inputElems = "";
+let filteredvalues;
+let thehtml
+let checkgenres = "";
 function showmovies()
 	{
 	//Now I have the arrays built for the movies I can check any filters and then display them
 	ratingvalue = 3; //set ratingvalue at 3
 	document.getElementById("showmovies").innerHTML = "";//set the showmovies div to be empty so it doesn't pick up on previous times run
-	var filtervalues = "";
+	let filtervalues = "";
 		inputElems = document.getElementsByTagName("input")
 		for (e=0; e<inputElems.length; e++) //see if any check boxes have been selected and if so add them to the filtervalue string
 			{
@@ -153,7 +153,7 @@ function displayfilm(arrayid)
 function buildfilterhtml()
 	{
 
-	var genrefiltertxt = "";
+	let genrefiltertxt = "";
 	for(g=0;g<Allgenres.genres.length;g++)
 		{//loops through the allgenres array to build the html for the genre filter bar - checks first if the ID appears in checkgenres
 		if(checkgenres.indexOf(Allgenres.genres[g].id) != -1)
